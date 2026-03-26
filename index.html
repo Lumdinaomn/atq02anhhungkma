@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chuyển hệ số • Phép toán nhị phân • IEEE 754</title>
+  <style>
+    :root{--bg:#f4f7fb;--card:#fff;--line:#d8e0ef;--text:#152033;--muted:#5d6b82;--accent:#2b5fd9}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);padding:20px}
+    .wrap{max-width:1100px;margin:0 auto}
+    .hero,.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 24px rgba(10,35,80,.06)}
+    .hero{padding:22px 24px;margin-bottom:18px}
+    .hero h1{margin:0 0 8px;font-size:28px}
+    .hero p{margin:0;color:var(--muted);line-height:1.6}
+    .grid{display:grid;grid-template-columns:1fr;gap:18px}
+    .card{padding:18px}
+    h2{margin:0 0 14px;font-size:22px}
+    h3{margin:10px 0 12px;font-size:18px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    .row4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
+    @media (max-width:800px){.row,.row3,.row4{grid-template-columns:1fr}}
+    label{display:block;font-weight:700;margin:10px 0 6px}
+    input,select,button{width:100%;padding:11px 12px;border-radius:12px;border:1px solid #cfd8ea;font-size:15px}
+    input,select{background:#fff}
+    button{background:var(--accent);color:#fff;border:none;font-weight:700;cursor:pointer}
+    button:hover{filter:brightness(.96)}
+    .result{background:#f8fbff;border:1px solid #d7e6ff;border-radius:14px;padding:14px;margin-top:14px}
+    .out{font-family:Consolas,monospace;font-size:16px}
+    .solution{white-space:pre-wrap;line-height:1.7;background:#fcfcfe;border:1px solid #e4e8f2;border-radius:14px;padding:16px;margin-top:14px}
+    .small{font-size:13px;color:var(--muted)}
+    .badge{display:inline-block;background:#eef4ff;color:#2350bc;border:1px solid #cfe0ff;border-radius:999px;padding:5px 10px;font-size:13px;margin-bottom:8px}
+    .buttons{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+    @media (max-width:800px){.buttons{grid-template-columns:1fr}}
+
+    .algo-wrap{display:grid;grid-template-columns:280px 1fr;gap:14px;align-items:start}
+    .algo-note{background:#f8fbff;border:1px solid #d7e6ff;border-radius:14px;padding:14px}
+    .algo-note ul{margin:8px 0 0 18px;padding:0}
+    .algo-table{width:100%;border-collapse:collapse;margin-top:8px;font-family:Consolas,monospace;font-size:15px}
+    .algo-table th,.algo-table td{border:1px solid #dfe6f4;padding:8px 10px;text-align:center;vertical-align:middle}
+    .algo-table th{background:#eef4ff;font-family:Arial,Helvetica,sans-serif;font-size:14px}
+    .algo-table td.action{text-align:left;font-family:Arial,Helvetica,sans-serif;font-size:14px}
+    .final-chip{display:inline-block;padding:4px 10px;border-radius:999px;background:#eef9f0;border:1px solid #cfe9d3;font-weight:700}
+    .reg{letter-spacing:1px;font-weight:700}
+    @media (max-width:900px){.algo-wrap{grid-template-columns:1fr}}
+
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="badge">Bản hoàn chỉnh</div>
+    <h1>Chuyển hệ số • Phép toán nhị phân • IEEE 754</h1>
+    <p>Có đủ đổi hệ 2, 8, 10, 16; cộng trừ nhân chia nhị phân; IEEE 754; và thêm 4 phần: nhân không dấu, nhân có dấu, chia không dấu, chia có dấu.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>1) Đổi hệ số</h2>
+      <div class="row">
+        <div>
+          <label>Hệ đầu vào</label>
+          <select id="baseIn">
+            <option value="2">2</option>
+            <option value="8">8</option>
+            <option value="10" selected>10</option>
+            <option value="16">16</option>
+          </select>
+        </div>
+        <div>
+          <label>Số cần đổi</label>
+          <input id="numberInput" placeholder="Ví dụ: 45 ; 137.8 ; 101101.101 ; 17B.E" />
+        </div>
+      </div>
+      <button onclick="solveConvert()">Giải và trình bày</button>
+      <div class="result">
+        <div>Hệ 2: <span class="out" id="out2"></span></div>
+        <div>Hệ 8: <span class="out" id="out8"></span></div>
+        <div>Hệ 10: <span class="out" id="out10"></span></div>
+        <div>Hệ 16: <span class="out" id="out16"></span></div>
+      </div>
+      <div class="solution" id="convertSolution">Lời giải sẽ hiện ở đây.</div>
+    </div>
+
+    <div class="card">
+      <h2>2) Cộng / trừ / nhân / chia số nhị phân</h2>
+      <div class="row3">
+        <div>
+          <label>Số thứ nhất</label>
+          <input id="binA" placeholder="Ví dụ: 1011.01" />
+        </div>
+        <div>
+          <label>Phép toán</label>
+          <select id="binOp">
+            <option value="+">Cộng (+)</option>
+            <option value="-">Trừ (-)</option>
+            <option value="*">Nhân (×)</option>
+            <option value="/">Chia (÷)</option>
+          </select>
+        </div>
+        <div>
+          <label>Số thứ hai</label>
+          <input id="binB" placeholder="Ví dụ: 10.1" />
+        </div>
+      </div>
+      <button onclick="solveBinaryCalc()">Tính và trình bày</button>
+      <div class="result">
+        <div>Kết quả hệ 2: <span class="out" id="binRes2"></span></div>
+        <div>Kết quả hệ 10: <span class="out" id="binRes10"></span></div>
+      </div>
+      <div class="solution" id="binarySolution">Lời giải sẽ hiện ở đây.</div>
+    </div>
+
+    <div class="card">
+      <h2>3) Phép nhân / chia số nguyên</h2>
+      <div class="row3">
+        <div>
+          <label>Số thứ nhất</label>
+          <input id="intA" placeholder="Ví dụ: 13 hoặc -13" />
+        </div>
+        <div>
+          <label>Số thứ hai</label>
+          <input id="intB" placeholder="Ví dụ: 5 hoặc -5" />
+        </div>
+        <div>
+          <label>Số bit trình bày</label>
+          <select id="bitWidth">
+            <option value="4" selected>4 bit</option>
+            <option value="8">8 bit</option>
+            <option value="16">16 bit</option>
+          </select>
+        </div>
+      </div>
+      <div class="small" style="margin-top:8px">Phần trình bày sẽ hiển thị theo bảng thanh ghi giống bài giảng: C/A/Q cho nhân không dấu, A/Q/Q-1 cho nhân có dấu, A/Q cho chia.</div>
+      <div class="buttons">
+        <button onclick="runUnsignedMultiply()">Phép nhân 2 số nguyên không dấu</button>
+        <button onclick="runSignedMultiply()">Phép nhân 2 số nguyên có dấu</button>
+        <button onclick="runUnsignedDivide()">Phép chia 2 số nguyên không dấu</button>
+        <button onclick="runSignedDivide()">Phép chia 2 số nguyên có dấu</button>
+      </div>
+      <div class="result">
+        <div>Kết quả: <span class="out" id="intOpResult"></span></div>
+      </div>
+      <div class="solution" id="intOpSolution">Lời giải sẽ hiện ở đây.</div>
+    </div>
+
+    <div class="card">
+      <h2>4) IEEE 754</h2>
+      <label>Nhập số thực</label>
+      <input id="floatInput" placeholder="Ví dụ: 10.75 hoặc -5.275" />
+      <button onclick="solveIEEE()">Chuyển IEEE 754</button>
+      <div class="result">
+        <div>32-bit: <span class="out" id="ieee32"></span></div>
+        <div>16-bit: <span class="out" id="ieee16"></span></div>
+        <div class="small">16-bit ở đây là half precision: 1 bit dấu, 5 bit số mũ, 10 bit mantissa.</div>
+      </div>
+      <div class="solution" id="ieeeSolution">Lời giải sẽ hiện ở đây.</div>
+
+      <hr style="margin:18px 0;border:none;border-top:1px solid #e4e8f2">
+      <h3>4.2) Biểu diễn số thực từ chuỗi bit IEEE 754</h3>
+      <div class="row">
+        <div>
+          <label>Độ dài</label>
+          <select id="ieeeDecodeType">
+            <option value="32" selected>32 bit</option>
+            <option value="16">16 bit</option>
+          </select>
+        </div>
+        <div>
+          <label>Chuỗi bit</label>
+          <input id="ieeeBitsInput" placeholder="Ví dụ: 01000010100011001110100111111100" />
+        </div>
+      </div>
+      <button onclick="decodeIEEEBitsUI()">Phân tích và trình bày</button>
+      <div class="result">
+        <div>Bit dấu: <span class="out" id="decodedSign"></span></div>
+        <div>Số mũ: <span class="out" id="decodedExponent"></span></div>
+        <div>Định trị: <span class="out" id="decodedMantissa"></span></div>
+        <div>Giá trị thực: <span class="out" id="decodedValue"></span></div>
+      </div>
+      <div class="solution" id="ieeeDecodeSolution">Lời giải sẽ hiện ở đây.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DIGITS = '0123456789ABCDEF';
+function val(ch){ return DIGITS.indexOf(ch.toUpperCase()); }
+function digit(v){ return DIGITS[v]; }
+function sub(base){ return `<sub>${base}</sub>`; }
+function withBase(n,b){ return `${n}${sub(b)}`; }
+function formatNum(n){
+  if (!Number.isFinite(n)) return String(n);
+  let s = Number(n).toFixed(12).replace(/0+$/,'').replace(/\.$/,'');
+  return s === '-0' ? '0' : s;
+}
+function padLeft(str, size, ch='0'){ while(str.length<size) str=ch+str; return str; }
+function padRight(str, size, ch='0'){ while(str.length<size) str=str+ch; return str; }
+function isValidForBase(str, base){
+  const p = {
+    2:/^-?[01]+(\.[01]+)?$/,
+    8:/^-?[0-7]+(\.[0-7]+)?$/,
+    10:/^-?\d+(\.\d+)?$/,
+    16:/^-?[0-9A-Fa-f]+(\.[0-9A-Fa-f]+)?$/
+  };
+  return p[base].test(str.trim());
+}
+function parseBaseToDecimal(str, base){
+  let neg = str.startsWith('-');
+  if (neg) str = str.slice(1);
+  const [ip, fp=''] = str.toUpperCase().split('.');
+  let n = 0;
+  for (let i=0;i<ip.length;i++) n = n*base + val(ip[i]);
+  let frac = 0;
+  for (let i=0;i<fp.length;i++) frac += val(fp[i])/Math.pow(base,i+1);
+  return neg ? -(n+frac) : (n+frac);
+}
+function decToBase(num, base, fracLimit=16){
+  const sign = num < 0 ? '-' : '';
+  num = Math.abs(num);
+  const ip = Math.floor(num);
+  let fp = num - ip;
+  let intStr = ip === 0 ? '0' : '';
+  let x = ip;
+  while (x > 0) { intStr = digit(x % base) + intStr; x = Math.floor(x / base); }
+  if (fp < 1e-12) return sign + intStr;
+  let fracStr = '';
+  for (let i=0;i<fracLimit && fp > 1e-12;i++) {
+    fp *= base;
+    const d = Math.floor(fp + 1e-12);
+    fracStr += digit(d);
+    fp -= d;
+  }
+  fracStr = fracStr.replace(/0+$/,'');
+  return fracStr ? sign + intStr + '.' + fracStr : sign + intStr;
+}
+function intDivSteps(n, base){
+  if (n === 0) return [`0/${base} = 0 dư 0`];
+  const arr = []; let x = n;
+  while(x > 0){ arr.push(`${x}/${base} = ${Math.floor(x/base)} dư ${x%base}`); x = Math.floor(x/base); }
+  return arr;
+}
+function fracMulSteps(frac, base, limit=12){
+  const arr=[]; let x=frac;
+  for(let i=0;i<limit && x>1e-12;i++){
+    const y=x*base, d=Math.floor(y+1e-12);
+    arr.push(`${formatNum(x)} × ${base} = ${formatNum(y)} => lấy ${digit(d)}`);
+    x=y-d;
+  }
+  return arr;
+}
+function binaryToOct(bin){
+  let [ip, fp=''] = bin.split('.');
+  ip = padLeft(ip, Math.ceil(ip.length/3)*3, '0');
+  fp = fp ? padRight(fp, Math.ceil(fp.length/3)*3, '0') : '';
+  let a=[]; for(let i=0;i<ip.length;i+=3) a.push(parseInt(ip.slice(i,i+3),2).toString(8));
+  let b=[]; for(let i=0;i<fp.length;i+=3) b.push(parseInt(fp.slice(i,i+3),2).toString(8));
+  let left=a.join('').replace(/^0+(?=\d)/,''); if(!left) left='0';
+  let right=b.join('').replace(/0+$/,'');
+  return right ? `${left}.${right}` : left;
+}
+function binaryToHex(bin){
+  let [ip, fp=''] = bin.split('.');
+  ip = padLeft(ip, Math.ceil(ip.length/4)*4, '0');
+  fp = fp ? padRight(fp, Math.ceil(fp.length/4)*4, '0') : '';
+  let a=[]; for(let i=0;i<ip.length;i+=4) a.push(parseInt(ip.slice(i,i+4),2).toString(16).toUpperCase());
+  let b=[]; for(let i=0;i<fp.length;i+=4) b.push(parseInt(fp.slice(i,i+4),2).toString(16).toUpperCase());
+  let left=a.join('').replace(/^0+(?=\d|[A-F])/,''); if(!left) left='0';
+  let right=b.join('').replace(/0+$/,'');
+  return right ? `${left}.${right}` : left;
+}
+function groupFromRight(bits, size){
+  const padded = padLeft(bits, Math.ceil(bits.length/size)*size, '0');
+  const groups = [];
+  for(let i=0;i<padded.length;i+=size) groups.push(padded.slice(i,i+size));
+  return { padded, groups };
+}
+function groupFromLeft(bits, size){
+  const padded = padRight(bits, Math.ceil(bits.length/size)*size, '0');
+  const groups = [];
+  for(let i=0;i<padded.length;i+=size) groups.push(padded.slice(i,i+size));
+  return { padded, groups };
+}
+function solveConvert(){
+  const base = Number(document.getElementById('baseIn').value);
+  const raw = document.getElementById('numberInput').value.trim();
+  if(!raw) return alert('Vui lòng nhập số cần đổi');
+  if(!isValidForBase(raw, base)) return alert('Số không hợp lệ cho hệ ' + base);
+  const dec = parseBaseToDecimal(raw, base);
+  const b2 = base===2 ? raw.toUpperCase() : decToBase(dec,2,16);
+  const b8 = base===8 ? raw.toUpperCase() : (base===2 ? (raw.startsWith('-')?'-':'') + binaryToOct(raw.replace('-','').toUpperCase()) : decToBase(dec,8,16));
+  const b10 = formatNum(dec);
+  const b16 = base===16 ? raw.toUpperCase() : (base===2 ? (raw.startsWith('-')?'-':'') + binaryToHex(raw.replace('-','').toUpperCase()) : decToBase(dec,16,16).toUpperCase());
+  document.getElementById('out2').innerHTML = withBase(b2,2);
+  document.getElementById('out8').innerHTML = withBase(b8,8);
+  document.getElementById('out10').innerHTML = withBase(b10,10);
+  document.getElementById('out16').innerHTML = withBase(b16,16);
+
+  const lines=[];
+  const rawUpper = raw.toUpperCase();
+  lines.push(`Đề bài: Chuyển ${withBase(rawUpper,base)} sang hệ 2, hệ 8, hệ 10, hệ 16.`);
+  lines.push('');
+
+  if(base!==10){
+    lines.push(`${withBase(rawUpper,base)} => hệ thập phân`);
+    let absRaw = rawUpper.replace('-','');
+    const [ip, fp=''] = absRaw.split('.');
+    let partsInt=[];
+    for(let i=0;i<ip.length;i++){
+      const power = ip.length-1-i;
+      partsInt.push(`${ip[i]} × ${base}^${power}`);
+    }
+    if(fp.length){
+      for(let i=0;i<fp.length;i++) partsInt.push(`${fp[i]} × ${base}^(-${i+1})`);
+    }
+    lines.push(partsInt.join(' + '));
+    lines.push(`= ${withBase(formatNum(dec),10)}`);
+    lines.push('');
+  }
+
+  const decAbs = Math.abs(dec);
+  const [ipRaw, fpRaw=''] = formatNum(decAbs).split('.');
+  const intPart = Number(ipRaw), fracPart = fpRaw ? Number('0.'+fpRaw) : 0;
+  const absB2 = b2.replace('-','');
+  const [b2Int, b2Frac=''] = absB2.split('.');
+
+  lines.push(`${withBase(b10,10)} => hệ nhị phân`);
+  lines.push('Phần nguyên:');
+  lines.push(intDivSteps(intPart,2).join('\n'));
+  lines.push(`Lấy từ dưới lên trên: ${withBase(intPart,10)} = ${withBase(decToBase(intPart,2),2)}`);
+  if(fracPart>0){
+    lines.push('');
+    lines.push('Phần thập phân:');
+    lines.push(fracMulSteps(fracPart,2,12).join('\n'));
+    lines.push(`=> ${withBase(fracPart,10)} = ${withBase('0.'+(b2.split('.')[1]||''),2)}`);
+  }
+  lines.push(`Vậy: ${withBase(b10,10)} = ${withBase(b2,2)}`);
+  lines.push('');
+
+  lines.push(`${withBase(b10,10)} => sang hệ bát phân`);
+  lines.push(`${withBase(b10,10)} = ${withBase(b2,2)}`);
+  const octInt = groupFromRight(b2Int, 3);
+  lines.push(`Gộp 3 bit từ phải sang trái: ${octInt.groups.join(' | ')}`);
+  lines.push(octInt.groups.map(g => `${g} = ${parseInt(g,2)}`).join(' ; '));
+  if(b2Frac){
+    const octFrac = groupFromLeft(b2Frac, 3);
+    lines.push(`Gộp 3 bit phần thập phân từ trái sang phải: ${octFrac.groups.join(' | ')}`);
+    lines.push(octFrac.groups.map(g => `${g} = ${parseInt(g,2)}`).join(' ; '));
+  }
+  lines.push(`=> ${withBase(b10,10)} = ${withBase(b8,8)}`);
+  lines.push('');
+
+  lines.push(`${withBase(b10,10)} => hệ thập lục phân`);
+  lines.push(`${withBase(b10,10)} = ${withBase(b2,2)}`);
+  const hexInt = groupFromRight(b2Int, 4);
+  lines.push(`Gộp 4 bit từ phải sang trái: ${hexInt.groups.join(' | ')}`);
+  lines.push(hexInt.groups.map(g => `${g} = ${parseInt(g,2)} = ${parseInt(g,2).toString(16).toUpperCase()}`).join(' ; '));
+  if(b2Frac){
+    const hexFrac = groupFromLeft(b2Frac, 4);
+    lines.push(`Gộp 4 bit phần thập phân từ trái sang phải: ${hexFrac.groups.join(' | ')}`);
+    lines.push(hexFrac.groups.map(g => `${g} = ${parseInt(g,2)} = ${parseInt(g,2).toString(16).toUpperCase()}`).join(' ; '));
+  }
+  lines.push(`=> ${withBase(b10,10)} = ${withBase(b16,16)}`);
+
+  document.getElementById('convertSolution').innerHTML = lines.join('<br>');
+}
+function binaryToDecimal(str){ return parseBaseToDecimal(str,2); }
+function decimalToBinary(num, precision=16){ return decToBase(num,2,precision); }
+function alignBinaryStrings(a,b){
+  const [ai, af=''] = a.split('.');
+  const [bi, bf=''] = b.split('.');
+  const maxI = Math.max(ai.length, bi.length);
+  const maxF = Math.max(af.length, bf.length);
+  return {
+    a: ai.padStart(maxI,'0') + (maxF ? '.' + af.padEnd(maxF,'0') : ''),
+    b: bi.padStart(maxI,'0') + (maxF ? '.' + bf.padEnd(maxF,'0') : ''),
+  };
+}
+function solveBinaryCalc(){
+  const a = document.getElementById('binA').value.trim();
+  const b = document.getElementById('binB').value.trim();
+  const op = document.getElementById('binOp').value;
+  if(!isValidForBase(a,2) || !isValidForBase(b,2)) return alert('Vui lòng nhập đúng số nhị phân.');
+  const da = binaryToDecimal(a), db = binaryToDecimal(b);
+  let result;
+  if(op === '+') result = da + db;
+  if(op === '-') result = da - db;
+  if(op === '*') result = da * db;
+  if(op === '/') { if(Math.abs(db)<1e-12) return alert('Không thể chia cho 0'); result = da / db; }
+  const result2 = decimalToBinary(result,16);
+  document.getElementById('binRes2').innerHTML = withBase(result2,2);
+  document.getElementById('binRes10').innerHTML = withBase(formatNum(result),10);
+  const lines=[];
+  lines.push(`Đề bài: Tính ${withBase(a,2)} ${op} ${withBase(b,2)}`);
+  lines.push('');
+  lines.push('Đổi sang hệ 10:');
+  lines.push(`${withBase(a,2)} = ${withBase(formatNum(da),10)}`);
+  lines.push(`${withBase(b,2)} = ${withBase(formatNum(db),10)}`);
+  lines.push('');
+  lines.push(`Thực hiện phép tính:`);
+  lines.push(`${formatNum(da)} ${op} ${formatNum(db)} = ${formatNum(result)}`);
+  lines.push('');
+  if(op==='+' || op==='-'){
+    const al = alignBinaryStrings(a.replace('-',''), b.replace('-',''));
+    lines.push('Trình bày thẳng cột (tham khảo):');
+    lines.push(`  ${al.a}`);
+    lines.push(`${op} ${al.b}`);
+    lines.push('='.repeat(Math.max(al.a.length, al.b.length)+2));
+    lines.push(`  ${result2.replace('-','')}` + (result<0 ? ' (gắn dấu -)' : ''));
+    lines.push('');
+  }
+  lines.push(`=> Kết quả: ${withBase(result2,2)} = ${withBase(formatNum(result),10)}`);
+  document.getElementById('binarySolution').innerHTML = lines.join('<br>');
+}
+
+function toUnsignedInt(x){
+  if(!/^\d+$/.test(x.trim())) return null;
+  return Number(x);
+}
+function toSignedInt(x){
+  if(!/^-?\d+$/.test(x.trim())) return null;
+  return Number(x);
+}
+function binUnsigned(n){ return n.toString(2); }
+function getBitWidth(){ return Number(document.getElementById('bitWidth').value || 4); }
+function mask(width){ return (1 << width) - 1; }
+function toBinWidth(num,width){ return (num & mask(width)).toString(2).padStart(width,'0'); }
+function twosValue(bits){
+  const width = bits.length;
+  let n = parseInt(bits,2);
+  if(bits[0]==='1') n -= (1 << width);
+  return n;
+}
+function fromSigned(num,width){ return toBinWidth(num,width); }
+function addFixed(aBits,bBits,width){ return toBinWidth(parseInt(aBits,2)+parseInt(bBits,2),width); }
+function subFixed(aBits,bBits,width){ return toBinWidth(parseInt(aBits,2)-parseInt(bBits,2),width); }
+function renderAlgo(title, noteHtml, headers, rows){
+  return `<div><div style="font-weight:700;font-size:18px;margin-bottom:10px">${title}</div><div class="algo-wrap"><div class="algo-note">${noteHtml}</div><div><table class="algo-table"><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map((c,i)=>`<td class="${i===r.length-1?'action':''}">${c}</td>`).join('')}</tr>`).join('')}</table></div></div></div>`;
+}
+function setIntOutput(out){
+  document.getElementById('intOpResult').textContent = out.result;
+  document.getElementById('intOpSolution').innerHTML = out.solution;
+}
+function multiplyUnsignedSteps(a,b,width){
+  if(a >= (1<<width) || b >= (1<<width)) return {result:'Lỗi', solution:`Số quá lớn cho ${width} bit. Hãy chọn số bit lớn hơn.`};
+  let C='0', A='0'.repeat(width), Q=toBinWidth(b,width), M=toBinWidth(a,width), n=width;
+  const rows=[];
+  rows.push([C, `<span class="reg">${A}</span>`, `<span class="reg">${Q}</span>`, `Khởi tạo, n = ${n}`]);
+  while(n>0){
+    if(Q[Q.length-1]==='1'){
+      const sum = parseInt(A,2) + parseInt(M,2);
+      C = sum > mask(width) ? '1' : '0';
+      A = toBinWidth(sum,width);
+      rows.push([C, `<span class="reg">${A}</span>`, `<span class="reg">${Q}</span>`, `Q₀ = 1 ⇒ A ← A + M`]);
+    }else{
+      rows.push([C, `<span class="reg">${A}</span>`, `<span class="reg">${Q}</span>`, `Q₀ = 0 ⇒ không cộng`]);
+    }
+    const combo = C + A + Q;
+    const shifted = '0' + combo.slice(0,-1);
+    C = shifted[0];
+    A = shifted.slice(1,1+width);
+    Q = shifted.slice(1+width);
+    n--;
+    rows.push([C, `<span class="reg">${A}</span>`, `<span class="reg">${Q}</span>`, `Dịch phải 1 bit, n = ${n}`]);
+  }
+  const productBits = A + Q;
+  const result = a*b;
+  const note = `<b>Ví dụ:</b> ${a} × ${b}<br><br>
+  <div>n = ${width}</div>
+  <div>Số bị nhân M = <span class="reg">${M}</span></div>
+  <div>Số nhân Q = <span class="reg">${toBinWidth(b,width)}</span></div>
+  <div>Sau ${width} lần lặp, tích nằm trong AQ.</div>
+  <div style="margin-top:10px"><span class="final-chip">AQ = ${productBits} = ${result}<sub>10</sub></span></div>`;
+  return {result:`${result} = ${productBits}₂`, solution:renderAlgo('Phép nhân 2 số nguyên không dấu', note, ['C','A','Q','Thao tác'], rows)};
+}
+function multiplySignedSteps(a,b,width){
+  const min=-(1<<(width-1)), max=(1<<(width-1))-1;
+  if(a<min || a>max || b<min || b>max) return {result:'Lỗi', solution:`Số vượt phạm vi biểu diễn ${width} bit có dấu.`};
+  let A='0'.repeat(width), Q=fromSigned(b,width), Q1='0', M=fromSigned(a,width), negM=fromSigned(-a,width), n=width;
+  const rows=[];
+  rows.push([`<span class="reg">${A}</span>`,`<span class="reg">${Q}</span>`,Q1,`Khởi tạo, n = ${n}`]);
+  while(n>0){
+    const pair = Q[Q.length-1] + Q1;
+    if(pair==='01'){
+      A = addFixed(A,M,width);
+      rows.push([`<span class="reg">${A}</span>`,`<span class="reg">${Q}</span>`,Q1,`Q₀Q₋₁ = 01 ⇒ A ← A + M`]);
+    }else if(pair==='10'){
+      A = addFixed(A,negM,width);
+      rows.push([`<span class="reg">${A}</span>`,`<span class="reg">${Q}</span>`,Q1,`Q₀Q₋₁ = 10 ⇒ A ← A - M`]);
+    }else{
+      rows.push([`<span class="reg">${A}</span>`,`<span class="reg">${Q}</span>`,Q1,`Q₀Q₋₁ = ${pair} ⇒ giữ nguyên`]);
+    }
+    const newQ1 = Q[Q.length-1];
+    Q = A[A.length-1] + Q.slice(0,-1);
+    A = A[0] + A.slice(0,-1);
+    Q1 = newQ1;
+    n--;
+    rows.push([`<span class="reg">${A}</span>`,`<span class="reg">${Q}</span>`,Q1,`Dịch phải số học, n = ${n}`]);
+  }
+  const productBits = A + Q;
+  const result = twosValue(productBits);
+  const note = `<b>Ví dụ:</b> ${a} × ${b}<br><br>
+  <div>n = ${width}</div>
+  <div>M = <span class="reg">${M}</span> (${a})</div>
+  <div>-M = <span class="reg">${negM}</span> (${-a})</div>
+  <div>Q = <span class="reg">${fromSigned(b,width)}</span> (${b})</div>
+  <div>Q-1 = 0</div>
+  <div style="margin-top:10px"><span class="final-chip">AQ = ${productBits} = ${result}<sub>10</sub></span></div>`;
+  return {result:`${result} = ${productBits}₂`, solution:renderAlgo('Phép nhân 2 số nguyên có dấu (Booth)', note, ['A','Q','Q-1','Thao tác'], rows)};
+}
+function divideUnsignedSteps(a,b,width){
+  if(b===0) return {result:'Lỗi', solution:'Không thể chia cho 0'};
+  if(a >= (1<<width) || b >= (1<<width)) return {result:'Lỗi', solution:`Số quá lớn cho ${width} bit. Hãy chọn số bit lớn hơn.`};
+  let A='0'.repeat(width), Q=toBinWidth(a,width), M=toBinWidth(b,width), n=width;
+  const rows=[];
+  rows.push([`<span class="reg">${A}</span>`,`<span class="reg">${Q}</span>`,`Khởi tạo, n = ${n}`]);
+  while(n>0){
+    A = A.slice(1) + Q[0];
+    Q = Q.slice(1) + '0';
+    rows.push([`<span class="reg">${A}</span>`,`<span class="reg">${Q}</span>`,`Dịch trái AQ`]);
+    const sub = parseInt(A,2) - parseInt(M,2);
+    if(sub < 0){
+      const trial = toBinWidth(sub,width);
+      rows.push([`<span class="reg">${trial}</span>`,`<span class="reg">${Q}</span>`,`A ← A - M (âm)`]);
+      Q = Q.slice(0,-1) + '0';
+      rows.push([`<span class="reg">${A}</span>`,`<span class="reg">${Q}</span>`,`Khôi phục A, đặt Q₀ = 0, n = ${n-1}`]);
+    } else {
+      A = toBinWidth(sub,width);
+      Q = Q.slice(0,-1) + '1';
+      rows.push([`<span class="reg">${A}</span>`,`<span class="reg">${Q}</span>`,`A ← A - M, đặt Q₀ = 1, n = ${n-1}`]);
+    }
+    n--;
+  }
+  const quotient=parseInt(Q,2), remainder=parseInt(A,2);
+  const note = `<b>Ví dụ:</b> ${a} : ${b}<br><br>
+  <div>n = ${width}</div>
+  <div>Số bị chia Q = <span class="reg">${toBinWidth(a,width)}</span></div>
+  <div>Số chia M = <span class="reg">${M}</span></div>
+  <div style="margin-top:10px"><span class="final-chip">Q = ${Q} = ${quotient}<sub>10</sub>, A = ${A} = ${remainder}<sub>10</sub></span></div>`;
+  return {result:`Thương ${quotient}, dư ${remainder}`, solution:renderAlgo('Phép chia 2 số nguyên không dấu', note, ['A','Q','Thao tác'], rows)};
+}
+function divideSignedSteps(a,b,width){
+  if(b===0) return {result:'Lỗi', solution:'Không thể chia cho 0'};
+  const min=-(1<<(width-1)), max=(1<<(width-1))-1;
+  if(a<min || a>max || b<min || b>max) return {result:'Lỗi', solution:`Số vượt phạm vi biểu diễn ${width} bit có dấu.`};
+  const sign = (a<0) ^ (b<0) ? -1 : 1;
+  const aa = Math.abs(a), bb = Math.abs(b);
+  const base = divideUnsignedSteps(aa,bb,width);
+  if(base.result==='Lỗi') return base;
+  const q0 = Math.floor(aa/bb), r = aa%bb, q = sign*q0;
+  const note = `<b>Ví dụ:</b> ${a} : ${b}<br><br>
+  <div>Xét dấu: ${sign<0 ? 'khác dấu nên thương âm' : 'cùng dấu nên thương dương'}.</div>
+  <div>Thực hiện bảng chia với trị tuyệt đối |${a}| = ${aa}, |${b}| = ${bb}.</div>
+  <div>Dư mang cùng dấu với số bị chia nên ở đây dư = ${a<0 && r!==0 ? -r : r} theo quy ước chia có dư.</div>
+  <div style="margin-top:10px"><span class="final-chip">Thương = ${q}, dư = ${r}</span></div>`;
+  const solution = base.solution.replace('Phép chia 2 số nguyên không dấu','Phép chia 2 số nguyên có dấu');
+  return {result:`Thương ${q}, dư ${r}`, solution:solution.replace(/<div class="algo-note">[\s\S]*?<\/div>/, `<div class="algo-note">${note}</div>`)};
+}
+function runUnsignedMultiply(){
+  const a = toUnsignedInt(document.getElementById('intA').value);
+  const b = toUnsignedInt(document.getElementById('intB').value);
+  if(a===null || b===null) return alert('Phần không dấu chỉ nhập số nguyên không âm.');
+  setIntOutput(multiplyUnsignedSteps(a,b,getBitWidth()));
+}
+function runSignedMultiply(){
+  const a = toSignedInt(document.getElementById('intA').value);
+  const b = toSignedInt(document.getElementById('intB').value);
+  if(a===null || b===null) return alert('Vui lòng nhập số nguyên hợp lệ.');
+  setIntOutput(multiplySignedSteps(a,b,getBitWidth()));
+}
+function runUnsignedDivide(){
+  const a = toUnsignedInt(document.getElementById('intA').value);
+  const b = toUnsignedInt(document.getElementById('intB').value);
+  if(a===null || b===null) return alert('Phần không dấu chỉ nhập số nguyên không âm.');
+  setIntOutput(divideUnsignedSteps(a,b,getBitWidth()));
+}
+function runSignedDivide(){
+  const a = toSignedInt(document.getElementById('intA').value);
+  const b = toSignedInt(document.getElementById('intB').value);
+  if(a===null || b===null) return alert('Vui lòng nhập số nguyên hợp lệ.');
+  setIntOutput(divideSignedSteps(a,b,getBitWidth()));
+}
+function groupBits(bits, size=4){
+  const arr=[]; for(let i=0;i<bits.length;i+=size) arr.push(bits.slice(i,i+size)); return arr.join(' ');
+}
+function sumMantissaTerms(fracBits){
+  const terms=[];
+  for(let i=0;i<fracBits.length;i++) if(fracBits[i]==='1') terms.push(`1×2<sup>-${i+1}</sup>`);
+  return terms.length ? `1 + ` + terms.join(' + ') : '1';
+}
+function decodeIEEEBits(bits, totalBits){
+  bits = bits.replace(/\s+/g,'');
+  const expBits = totalBits===32 ? 8 : 5;
+  const mantBits = totalBits===32 ? 23 : 10;
+  const bias = totalBits===32 ? 127 : 15;
+  if(!new RegExp(`^[01]{${totalBits}}$`).test(bits)) throw new Error(`Vui lòng nhập đúng ${totalBits} bit.`);
+  const signBit = bits[0];
+  const expStr = bits.slice(1,1+expBits);
+  const mantStr = bits.slice(1+expBits);
+  const expVal = parseInt(expStr,2);
+  const sign = signBit==='1' ? -1 : 1;
+  let mantissaValue = 1;
+  for(let i=0;i<mantStr.length;i++) if(mantStr[i]==='1') mantissaValue += Math.pow(2,-(i+1));
+  let realExp = expVal - bias;
+  let value = sign * mantissaValue * Math.pow(2,realExp);
+  let special = '';
+  if(expVal===0){
+    mantissaValue = 0;
+    for(let i=0;i<mantStr.length;i++) if(mantStr[i]==='1') mantissaValue += Math.pow(2,-(i+1));
+    realExp = 1 - bias;
+    value = sign * mantissaValue * Math.pow(2,realExp);
+    special = mantissaValue===0 ? 'Số 0' : 'Số không chuẩn hoá';
+  }
+  if(expVal === (1<<expBits)-1){
+    if(/1/.test(mantStr)) special = 'NaN';
+    else special = signBit==='1' ? '-∞' : '+∞';
+  }
+  return {signBit, expStr, mantStr, expVal, bias, realExp, mantissaValue, value, special, totalBits};
+}
+function decodeIEEEBitsUI(){
+  try{
+    const totalBits = Number(document.getElementById('ieeeDecodeType').value);
+    const bits = document.getElementById('ieeeBitsInput').value.trim();
+    const d = decodeIEEEBits(bits,totalBits);
+    document.getElementById('decodedSign').innerHTML = `${d.signBit} ${d.signBit==='0' ? '(số dương)' : '(số âm)'}`;
+    document.getElementById('decodedExponent').innerHTML = `${d.expStr}<sub>2</sub> = ${d.expVal}<sub>10</sub>, e = ${d.expVal} - ${d.bias} = ${d.realExp}`;
+    document.getElementById('decodedMantissa').innerHTML = d.special ? d.special : `${formatNum(d.mantissaValue)}`;
+    document.getElementById('decodedValue').innerHTML = d.special ? d.special : `${formatNum(d.value)}`;
+
+    const expBits = totalBits===32 ? 8 : 5;
+    const mantLabel = totalBits===32 ? '23 bit' : '10 bit';
+    const grouped = groupBits(bits);
+    const lines=[];
+    lines.push(`<b>Đề bài:</b> Phân tích chuỗi bit ${grouped} theo chuẩn IEEE 754 ${totalBits}-bit.`);
+    lines.push('');
+    lines.push(`<b>Tách trường bit:</b>`);
+    lines.push(`- Dấu: <span class="reg">${d.signBit}</span>`);
+    lines.push(`- Phần mũ (${expBits} bit): <span class="reg">${d.expStr}</span>`);
+    lines.push(`- Phần định trị (${mantLabel}): <span class="reg">${d.mantStr}</span>`);
+    lines.push('');
+    lines.push(`<b>Phần dấu:</b> ${d.signBit} ⇒ ${d.signBit==='0' ? 'số dương' : 'số âm'}.`);
+    lines.push(`<b>Phần mũ:</b> ${d.expStr}<sub>2</sub> = ${d.expVal}<sub>10</sub>`);
+    if(!d.special || d.special==='Số 0' || d.special==='Số không chuẩn hoá') lines.push(`Giá trị mũ thực: e = ${d.expVal} - ${d.bias} = ${d.realExp}`);
+    lines.push('');
+    if(d.special==='NaN' || d.special.includes('∞')){
+      lines.push(`<b>Kết luận:</b> ${d.special}`);
+    }else{
+      if(d.expVal===0){
+        const terms=[];
+        for(let i=0;i<d.mantStr.length;i++) if(d.mantStr[i]==='1') terms.push(`1×2<sup>-${i+1}</sup>`);
+        lines.push(`<b>Phần định trị:</b> ${terms.length ? terms.join(' + ') : '0'} = ${formatNum(d.mantissaValue)}`);
+        lines.push(`Vì exp = 0 nên đây là ${d.special.toLowerCase()}, không có bit 1 ẩn ở trước.`);
+        lines.push(`Giá trị số thực: R = ${d.signBit==='1' ? '-' : ''}${formatNum(d.mantissaValue)} × 2<sup>${d.realExp}</sup> = <b>${formatNum(d.value)}</b>`);
+      }else{
+        lines.push(`<b>Phần định trị:</b> ${sumMantissaTerms(d.mantStr)} = ${formatNum(d.mantissaValue)}`);
+        lines.push(`Giá trị số thực: R = ${d.signBit==='1' ? '-' : ''}${formatNum(d.mantissaValue)} × 2<sup>${d.realExp}</sup> = <b>${formatNum(d.value)}</b>`);
+      }
+    }
+    document.getElementById('ieeeDecodeSolution').innerHTML = lines.join('<br>');
+  }catch(err){
+    alert(err.message);
+  }
+}
+
+function floatToIEEE32(val){
+  const f32 = new Float32Array(1);
+  const u32 = new Uint32Array(f32.buffer);
+  f32[0] = val;
+  return u32[0].toString(2).padStart(32,'0');
+}
+function floatToIEEE16(val){
+  const floatView = new Float32Array(1);
+  const intView = new Uint32Array(floatView.buffer);
+  floatView[0] = val;
+  const x = intView[0];
+  let sign = (x >> 31) & 1;
+  let exp = ((x >> 23) & 255) - 127 + 15;
+  let mant = (x >> 13) & 1023;
+  if (exp <= 0) { exp = 0; mant = 0; }
+  if (exp >= 31) { exp = 31; mant = 0; }
+  const half = (sign << 15) | (exp << 10) | mant;
+  return half.toString(2).padStart(16,'0');
+}
+function solveIEEE(){
+  const val = parseFloat(document.getElementById('floatInput').value);
+  if (Number.isNaN(val)) return alert('Vui lòng nhập số thực hợp lệ');
+
+  const b32 = floatToIEEE32(val);
+  const b16 = floatToIEEE16(val);
+
+  document.getElementById('ieee32').textContent = b32;
+  document.getElementById('ieee16').textContent = b16;
+
+  const absVal = Math.abs(val);
+  const signBit = val < 0 ? 1 : 0;
+
+  const normalBin = decimalToBinary(absVal, 20);
+  let normalized = '';
+  let exp = 0;
+  const parts = normalBin.split('.');
+  const ip = parts[0];
+  const fp = parts[1] || '';
+
+  if (absVal === 0) {
+    normalized = '0.0';
+    exp = 0;
+  } else if (ip !== '0') {
+    exp = ip.length - 1;
+    normalized = `1.${ip.slice(1)}${fp}`;
+  } else {
+    const firstOne = fp.indexOf('1');
+    exp = -(firstOne + 1);
+    normalized = `1.${fp.slice(firstOne + 1)}`;
+  }
+
+  let mantRaw = '';
+  if (absVal !== 0) mantRaw = normalized.split('.')[1] || '';
+
+  const exp32Dec = exp + 127;
+  const exp32 = exp32Dec.toString(2).padStart(8,'0');
+  const exp16Dec = exp + 15;
+  const exp16 = exp16Dec.toString(2).padStart(5,'0');
+
+  const mant32 = absVal === 0 ? '0'.repeat(23) : (mantRaw + '0'.repeat(23)).slice(0,23);
+  const mant16 = absVal === 0 ? '0'.repeat(10) : (mantRaw + '0'.repeat(10)).slice(0,10);
+
+  function integerToBinarySteps(n){
+    n = Math.floor(n);
+    if (n === 0) return [`0 = 0${sub(2)}`];
+    return [`${n} = ${decToBase(n,2)}${sub(2)}`];
+  }
+
+  function fractionToBinaryDetailed(frac, limit=12){
+    const lines = [];
+    let x = frac;
+    let out = '';
+    for(let i=0;i<limit && x > 1e-12;i++){
+      const y = x * 2;
+      const bit = Math.floor(y + 1e-12);
+      lines.push(`${formatNum(x)} × 2 = ${formatNum(y)} → ${bit}`);
+      out += String(bit);
+      x = y - bit;
+      if (x < 1e-12) break;
+    }
+    return {lines, bits: out || '0'};
+  }
+
+  const lines = [];
+  lines.push(`Bài 4. Chuyển các số thực sang dạng dấu phẩy động IEEE 754`);
+  lines.push('');
+  lines.push(`a. ${formatNum(val)}`);
+  lines.push('');
+
+  lines.push(`${formatNum(val)}${sub(10)} => hệ nhị phân`);
+  const intPart = Math.floor(absVal);
+  const fracPart = absVal - intPart;
+
+  if (absVal === 0) {
+    lines.push(`0 = 0${sub(2)}`);
+    lines.push('');
+    lines.push(`=> ${formatNum(val)} = 0${sub(2)}`);
+    lines.push('');
+    lines.push(`Chuẩn hoá:`);
+    lines.push(`0 = 0 × 2${sup(0)}`);
+  } else {
+    lines.push(...integerToBinarySteps(intPart));
+    if (fracPart > 1e-12) {
+      const fracInfo = fractionToBinaryDetailed(fracPart, 16);
+      lines.push(...fracInfo.lines);
+    }
+    lines.push('');
+    lines.push(`=> ${formatNum(val)} = ${normalBin}${sub(2)}`);
+    lines.push('');
+    lines.push(`Chuẩn hoá:`);
+    lines.push(`${normalBin} = ${normalized} × 2${sup(exp)}`);
+  }
+
+  lines.push('');
+  lines.push(`* IEEE 754 (32-bit)`);
+  lines.push(`- Dấu: ${signBit}`);
+  lines.push(`- Số mũ: ${exp} + 127 = ${exp32Dec} = ${exp32}`);
+  lines.push(`- Mantissa (Phần định trị) : ${mant32}`);
+  lines.push('');
+  lines.push(`=> ${signBit} ${exp32} ${mant32}`);
+  lines.push('');
+  lines.push(`* IEEE 754 (16-bit)`);
+  lines.push(`- Dấu: ${signBit}`);
+  lines.push(`- Số mũ: ${exp} + 15 = ${exp16Dec} = ${exp16}`);
+  lines.push(`- Mantissa(Phần định trị ): ${mant16}`);
+  lines.push('');
+  lines.push(`=> ${signBit} ${exp16} ${mant16}`);
+
+  document.getElementById('ieeeSolution').innerHTML = lines.join('<br>');
+}
+function sup(n){ return `<sup>${n}</sup>`; }
+
+</script>
+</body>
+</html>
